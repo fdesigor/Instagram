@@ -7,9 +7,7 @@ mongoose.connect('mongodb+srv://instagram:instagram@cluster0-w4zkv.mongodb.net/t
     useNewUrlParser: true,
 });
 
-// app.get('/', (req, res) =>{
-//     return res.send(`Hello ${req.query.name}`);
-// });
+app.use(require('./routes.js'));
 
 app.listen(3333);
 
