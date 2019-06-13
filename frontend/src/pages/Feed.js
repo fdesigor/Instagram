@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import api from '../services/api';
 
 import './Feed.css';
 
@@ -8,64 +9,49 @@ import comment from '../assets/comment.svg';
 import send from '../assets/send.svg';
 
 class Feed extends Component{
+    state = {
+        feed: [],
+    };
+
+    async componentDidMount(){
+        const response = await api.get('posts');
+
+        this.setState({ feed: response.data });
+    }
+
     render(){
         return (
             <section id="post-list">
-                <article>
-                    <header>
-                        <div className="user-info">
-                            <span>Igor Fernandes</span>
-                            <span className="place">Caraúbas, Rio Grande do Norte</span>
-                        </div>
 
-                        <img src={more} alt="Mais" />
-                    </header>
+                { this.state.feed.map(post => (
+                    <article>
+                        <header>
+                            <div className="user-info">
+                                <span>{ post.author }</span>
+                                <span className="place">{ post.place }</span>
+                            </div>
 
-                    <img src="http://fotografiatododia.com.br/wp-content/uploads/2016/04/7-fotografos-de-paisagem-para-seguir-no-instagram.jpg" alt="" />
+                            <img src={more} alt="Mais" />
+                        </header>
 
-                    <footer>
-                        <div className="actions">
-                            <img src={like} alt="Curtir" />
-                            <img src={comment} alt="Comentar" />
-                            <img src={send} alt="Enviar" />
-                        </div>
+                        <img src={`http://localhost:3333/files/${post.image}`} alt="" />
 
-                        <strong>900 curtidas</strong>
+                        <footer>
+                            <div className="actions">
+                                <img src={like} alt="Curtir" />
+                                <img src={comment} alt="Comentar" />
+                                <img src={send} alt="Enviar" />
+                            </div>
 
-                        <p>
-                            Uma imagem...
-                            <span>#react #oministack</span>
-                        </p>
-                    </footer>
-                </article>
+                            <strong>{ post.likes } curtidas</strong>
 
-                <article>
-                    <header>
-                        <div className="user-info">
-                            <span>Igor Fernandes</span>
-                            <span className="place">Caraúbas, Rio Grande do Norte</span>
-                        </div>
-
-                        <img src={more} alt="Mais" />
-                    </header>
-
-                    <img src="http://fotografiatododia.com.br/wp-content/uploads/2016/04/7-fotografos-de-paisagem-para-seguir-no-instagram.jpg" alt="" />
-
-                    <footer>
-                        <div className="actions">
-                            <img src={like} alt="Curtir" />
-                            <img src={comment} alt="Comentar" />
-                            <img src={send} alt="Enviar" />
-                        </div>
-
-                        <strong>900 curtidas</strong>
-
-                        <p>
-                            Uma imagem...
-                            <span>#react #oministack</span>
-                        </p>
-                    </footer>
-                </article>
+                            <p>
+                                { post.description }
+                                <span>{ post.hashtags }</span>
+                            </p>
+                        </footer>
+                    </article>
+                )) }
             </section>
         );
     };
