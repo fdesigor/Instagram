@@ -1,2 +1,5 @@
 node_modules
 *.lock
+
+uploads/resized/*
+!uploads/resized/
