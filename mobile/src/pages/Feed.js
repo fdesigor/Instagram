@@ -10,91 +10,107 @@ import comment from '../assets/comment.png';
 import send from '../assets/send.png';
 
 export default class Feed extends Component {
-  
+
   static navigationOptions = ({ navigation }) => ({
-    headerRight: (
-      <TouchableOpacity style={{ marginRight: 20 }} onPress={() => navigation.navigate('New')} >
-        <Image source={camera} />
-      </TouchableOpacity>
-    ),
+    headerRight: () => {
+      return (
+        <TouchableOpacity style={{ marginRight: 20 }} onPress={() => navigation.navigate('New')} >
+          <Image source={camera} />
+        </TouchableOpacity>
+      )
+    }
+
   });
 
   state = {
     feed: [],
   };
 
-  async componentDidMount(){
-      this.registerToSocket();
+  async componentDidMount() {
+    this.registerToSocket();
 
-      const response = await api.get('posts');
+    const response = await api.get('posts');
 
-      this.setState({ feed: response.data });
+    this.setState({ feed: response.data });
   }
 
   registerToSocket = () => {
-    const socket = io('http://10.0.0.105:3333');
-
-    socket.on('post', newPost => {
-        this.setState({ feed: [newPost, ...this.state.feed] });
+    const socket = io.connect('http://10.0.0.105:3333', {
+      timeout: 10000,
+      jsonp: false,
+      transports: ['websocket'],
+      autoConnect: false,
+      agent: '-',
+      path: '/',
+      pfx: '-',
+      cert: '-',
+      ca: '-',
+      ciphers: '-',
+      rejectUnauthorized: '-',
+      perMessageDeflate: '-'
     });
 
-    socket.on('like', likedPost => {
-        this.setState({ 
-            feed: this.state.feed.map(post => 
-                post._id === likedPost._id ? likedPost : post    
-            )
-        });
+  socket.on('post', newPost => {
+    this.setState({ feed: [newPost, ...this.state.feed] });
     });
+
+socket.on('like', likedPost => {
+  this.setState({
+    feed: this.state.feed.map(post =>
+      post._id === likedPost._id ? likedPost : post
+    )
+  });
+});
   }
 
-  handleLike = id => {
-    api.post(`/posts/${id}/like`);
-  }
+handleLike = id => {
+  api.post(`/posts/${id}/like`);
+}
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <FlatList 
-          data={this.state.feed}
-          keyExtractor={post => post._id}
-          renderItem={({ item }) => (
-            <View style={styles.feedItem}>
-              <View style={styles.feedItemHeader}>
-                <View style={styles.userInfo}>
-                  <Text style={styles.name}>{item.author}</Text>
-                  <Text style={styles.place}>{item.place}</Text>
-                </View>
-
-                <Image source={more} />
+render() {
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={this.state.feed}
+        keyExtractor={post => post._id}
+        renderItem={({ item }) => (
+          <View style={styles.feedItem}>
+            <View style={styles.feedItemHeader}>
+              <View style={styles.userInfo}>
+                <Text style={styles.name}>{item.author}</Text>
+                <Text style={styles.place}>{item.place}</Text>
               </View>
 
-              <Image style={styles.feedImage} source={{ uri: `http://10.0.0.105:3333/files/${item.image}` }} />
-
-              <View style={styles.feedItemFooter}>
-                <View style={styles.actions}>
-                  <TouchableOpacity style={styles.action} onPress={() => this.handleLike(item._id)}>
-                    <Image source={like} />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.action}>
-                    <Image source={comment} />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.action}>
-                    <Image source={send} />
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.likes}>{item.likes} curtidas</Text>
-                <Text style={styles.description}>{item.description}</Text>
-                <Text style={styles.hashtags}>{item.hashtags}</Text>
-              </View>
+              <Image source={more} />
             </View>
-          )}
-        />
-      </View>
-    );
-  }
+
+            <Image style={styles.feedImage} source={{ uri: `http://10.0.0.105:3333/files/${item.image}` }} />
+
+            <View style={styles.feedItemFooter}>
+              <View style={styles.actions}>
+                <TouchableOpacity style={styles.action} onPress={() => this.handleLike(item._id)}>
+                  <Image source={like} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.action}>
+                  <Image source={comment} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.action}>
+                  <Image source={send} />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.likes}>{item.likes} curtidas</Text>
+              <Text style={styles.description}>{item.description}</Text>
+              <Text style={styles.hashtags}>{item.hashtags}</Text>
+            </View>
+          </View>
+        )}
+      />
+    </View>
+  );
+}
 }
 
 const styles = StyleSheet.create({
@@ -108,7 +124,7 @@ const styles = StyleSheet.create({
   },
 
   feedItemHeader: {
-    paddingHorizontal: 15, 
+    paddingHorizontal: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

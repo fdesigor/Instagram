@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, TextInput, Image } from 'react-native';
-import ImagePicker from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import api from '../services/api.js';
 
 // import { Container } from './styles';
 
 export default class New extends Component {
   static navigationOptions = {
-    headerTitle: 'Nova publicação',
+    headerTitle: () => <Text>Nova publicação</Text>,
   };
 
   state = {
@@ -19,44 +19,57 @@ export default class New extends Component {
     hashtags: '',
   };
 
-  handleSelectImage = () => {
-    ImagePicker.showImagePicker({
-      title: 'Selecionar imagem'
-    }, upload => {
-      if (upload.error){
-        console.log('Error');
-      } else if (upload.didCancel){
-        console.log('User cancel');
-      } else {
-        const preview = {
-          uri: `data:image/jpeg;base64,${upload.data}`,
-        }
+  handleSelectImage = async () => {
+    await ImagePicker.requestCameraPermissionsAsync();
+    await ImagePicker.requestCameraRollPermissionsAsync();
 
-        let prefix;
-        let ext;
+    let upload = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      base64: true,
+      quality: 1
+    });
 
-        if (upload.fileName) {
-          [prefix, ext] = upload.fileName.split('.');
-          ext = ext.toLocaleLowerCase() === 'heic' ? 'jpg' : ext;
-        } else {
-          prefix = new Date().getTime();
-          ext = 'jpg';
-        }
-
-        const image = {
-          uri: upload.uri,
-          type: upload.type,
-          name: `${prefix}.${ext}`,
-        };
-
-        this.setState({ preview, image });
+    if (upload.error) {
+      console.log('Error');
+    } else if (upload.didCancel) {
+      console.log('User cancel');
+    } else {
+      const preview = {
+        uri: `data:image/jpeg;base64,${upload.base64}`,
       }
 
-    })
+      let prefix;
+      let ext;
+
+      if (upload.fileName) {
+        [prefix, ext] = upload.fileName.split('.');
+        ext = ext.toLocaleLowerCase() === 'heic' ? 'jpg' : ext;
+      } else {
+        prefix = new Date().getTime();
+        ext = 'jpg';
+      }
+
+      const image = {
+        uri: upload.uri,
+        type: upload.type,
+        name: `${prefix}.${ext}`,
+      };
+
+      console.log(image)
+
+      this.setState({ preview, image });
+    }
   }
 
   handleSubmit = async () => {
-    
+    let axiosRequestOptions = {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }
+
     const data = new FormData();
 
     data.append('image', this.state.image);
@@ -65,20 +78,21 @@ export default class New extends Component {
     data.append('description', this.state.description);
     data.append('hashtags', this.state.hashtags);
 
-    await api.post('posts', data );
+    await api.post('posts', data, axiosRequestOptions );
 
     this.props.navigation.navigate('Feed');
 
   }
-  
+
   render() {
     return (
       <View style={styles.container}>
+
+        {this.state.preview && <Image style={styles.preview} source={this.state.preview} />}
+
         <TouchableOpacity style={styles.selectButton} onPress={this.handleSelectImage}>
           <Text style={styles.selectButtonText}>Selecionar imagem</Text>
         </TouchableOpacity>
-
-        { this.state.preview && <Image style={styles.preview} source={this.state.preview} /> }
 
         <TextInput
           style={styles.input}
@@ -87,7 +101,7 @@ export default class New extends Component {
           placeholder="Nome do autor"
           placeholderTextColor="#999"
           value={this.state.author}
-          onChangeText={ author => this.setState({ author }) }
+          onChangeText={author => this.setState({ author })}
         />
 
         <TextInput
@@ -97,7 +111,7 @@ export default class New extends Component {
           placeholder="Lugar"
           placeholderTextColor="#999"
           value={this.state.place}
-          onChangeText={ place => this.setState({ place }) }
+          onChangeText={place => this.setState({ place })}
         />
 
         <TextInput
@@ -107,7 +121,7 @@ export default class New extends Component {
           placeholder="Descrição"
           placeholderTextColor="#999"
           value={this.state.description}
-          onChangeText={ description => this.setState({ description }) }
+          onChangeText={description => this.setState({ description })}
         />
 
         <TextInput
@@ -117,12 +131,12 @@ export default class New extends Component {
           placeholder="Hashtags"
           placeholderTextColor="#999"
           value={this.state.hashtags}
-          onChangeText={ hashtags => this.setState({ hashtags }) }
+          onChangeText={hashtags => this.setState({ hashtags })}
         />
-        
-      <TouchableOpacity style={styles.shareButton} onPress={this.handleSubmit}>
-        <Text style={styles.shareButtonText}>Compartilhar</Text>
-      </TouchableOpacity>
+
+        <TouchableOpacity style={styles.shareButton} onPress={this.handleSubmit}>
+          <Text style={styles.shareButtonText}>Compartilhar</Text>
+        </TouchableOpacity>
 
       </View>
     );
@@ -155,7 +169,7 @@ const styles = StyleSheet.create({
   preview: {
     width: 100,
     height: 100,
-    marginTop: 10,
+    marginBottom: 10,
     alignSelf: 'center',
     borderRadius: 4,
   },
