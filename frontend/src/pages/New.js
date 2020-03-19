@@ -17,11 +17,15 @@ class New extends Component{
         
         const data = new FormData();
 
+        console.log(this.state.image)
+
         data.append('image', this.state.image);
         data.append('author', this.state.author);
         data.append('place', this.state.place);
         data.append('description', this.state.description);
         data.append('hashtags', this.state.hashtags);
+
+        console.log(data)
 
         await api.post('posts', data );
 
